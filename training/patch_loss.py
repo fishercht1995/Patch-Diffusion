@@ -68,7 +68,7 @@ class Patch_EDMLoss:
         fsize = images.numel()
         images, images_pos = self.pachify(images, patch_size)
         psize = images.numel() + images_pos.numel()
-        print("Image size: {} {}\n".format(fsize, psize))
+        f.write("Image size: {} {}\n".format(fsize, psize))
 
         rnd_normal = torch.randn([images.shape[0], 1, 1, 1], device=images.device)
         sigma = (rnd_normal * self.P_std + self.P_mean).exp()

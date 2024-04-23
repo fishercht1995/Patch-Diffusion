@@ -58,7 +58,7 @@ def training_loop(
     device              = torch.device('cuda'),
 ):
     # Initialize.
-    f = open("/content/Patch-Diffusion/log.log", "a")
+    logf = open("/content/Patch-Diffusion/log.log", "a")
     start_time = time.time()
     np.random.seed((seed * dist.get_world_size() + dist.get_rank()) % (1 << 31))
     torch.manual_seed(np.random.randint(1 << 31))
@@ -191,7 +191,7 @@ def training_loop(
                 st = time.time()
                 loss.sum().mul(loss_scaling / batch_gpu_total / batch_mul).backward()
                 # loss.mean().mul(loss_scaling / batch_mul).backward()
-                f.write("{} {} {}\n".format("backward", patch_size, time.time()-st))
+                logf.write("{} {} {}\n".format("backward", patch_size, time.time()-st))
 
         # Update weights.
         for g in optimizer.param_groups:
