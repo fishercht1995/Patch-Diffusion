@@ -11,6 +11,7 @@
 import numpy as np
 import torch
 from torch_utils import persistence
+import time
 
 #----------------------------------------------------------------------------
 # Loss function corresponding to the variance preserving (VP) formulation
@@ -63,7 +64,11 @@ class Patch_EDMLoss:
         return padded, images_pos
 
     def __call__(self, net, images, patch_size, resolution, labels=None, augment_pipe=None):
+        f = open("/content/Patch-Diffusion/log.log", "a")
+        fsize = images.numel()
         images, images_pos = self.pachify(images, patch_size)
+        psize = images.numel() + images_pos.numel()
+        print("Image size: {} {}\n".format(fsize, psize))
 
         rnd_normal = torch.randn([images.shape[0], 1, 1, 1], device=images.device)
         sigma = (rnd_normal * self.P_std + self.P_mean).exp()
@@ -72,9 +77,10 @@ class Patch_EDMLoss:
         y, augment_labels = augment_pipe(images) if augment_pipe is not None else (images, None)
         n = torch.randn_like(y) * sigma
         yn = y + n
-
+        st = time.time()
         D_yn = net(yn, sigma, x_pos=images_pos, class_labels=labels, augment_labels=augment_labels)
         loss = weight * ((D_yn - y) ** 2)
+        f.write("{} {} {}\n".format("forward", patch_size, time.time()-st))
         return loss
 
 #----------------------------------------------------------------------------

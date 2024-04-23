@@ -20,6 +20,7 @@ from torch_utils import distributed as dist
 from torch_utils import training_stats
 from torch_utils import misc
 
+
 from diffusers import AutoencoderKL
 
 def set_requires_grad(model, value):
@@ -57,6 +58,7 @@ def training_loop(
     device              = torch.device('cuda'),
 ):
     # Initialize.
+    f = open("/content/Patch-Diffusion/log.log", "a")
     start_time = time.time()
     np.random.seed((seed * dist.get_world_size() + dist.get_rank()) % (1 << 31))
     torch.manual_seed(np.random.randint(1 << 31))
@@ -186,8 +188,10 @@ def training_loop(
                 loss = loss_fn(net=ddp, images=images, patch_size=patch_size, resolution=img_resolution,
                                labels=labels, augment_pipe=augment_pipe)
                 training_stats.report('Loss/loss', loss)
+                st = time.time()
                 loss.sum().mul(loss_scaling / batch_gpu_total / batch_mul).backward()
                 # loss.mean().mul(loss_scaling / batch_mul).backward()
+                f.write("{} {} {}\n".format("backward", patch_size, time.time()-st))
 
         # Update weights.
         for g in optimizer.param_groups:
